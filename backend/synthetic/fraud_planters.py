@@ -25,6 +25,7 @@ def _plant_txns_and_label(conn, txns, pattern_type, accounts_involved, fraud_lab
     ''', (case_id, pattern_type, ",".join(accounts_involved), fraud_label, difficulty, planted_at))
     conn.commit()
 
+
 def plant_structuring(conn, accounts):
     target_acc = random.choice(accounts)
     smurfs = random.sample([a for a in accounts if a != target_acc], 5)
@@ -33,23 +34,28 @@ def plant_structuring(conn, accounts):
     
     for i, smurf in enumerate(smurfs):
         txn_id = f"TXN_STR_{uuid.uuid4().hex[:6]}"
-        amount = random.uniform(45000, 49999) # Below 50k CASH threshold
-        txns.append((txn_id, f"CASH{random.randint(10000000, 99999999)}", (base_time + timedelta(hours=i)).isoformat(), smurf, target_acc, round(amount, 2), 'CASH', 'COMPLETED', 'Deposit'))
+        amount = random.uniform(800000, 999000) # Below 10L CTR threshold
+        channel = random.choice(['RTGS', 'NEFT'])
+        ref = f"UNIONB24{random.randint(10000000000000, 99999999999999)}"
+        txns.append((txn_id, ref, (base_time + timedelta(hours=i)).isoformat(), smurf, target_acc, round(amount, 2), channel, 'COMPLETED', 'Investment Transfer'))
         
     _plant_txns_and_label(conn, txns, 'structuring', [target_acc] + smurfs, 1, 'standard')
+
 
 def plant_layering(conn, accounts):
     chain = random.sample(accounts, 4)
     txns = []
     base_time = datetime(2024, random.randint(1, 12), random.randint(1, 28))
-    amount = random.uniform(500000, 1000000)
+    amount = random.uniform(400000, 490000) # Capped at 4.9L for IMPS limit
     
     for i in range(len(chain)-1):
         txn_id = f"TXN_LAY_{uuid.uuid4().hex[:6]}"
-        txns.append((txn_id, f"IMPS{random.randint(10000000, 99999999)}", (base_time + timedelta(minutes=i*10)).isoformat(), chain[i], chain[i+1], round(amount, 2), 'IMPS', 'COMPLETED', 'Transfer'))
+        ref = f"IMPS{random.randint(10000000, 99999999)}"
+        txns.append((txn_id, ref, (base_time + timedelta(minutes=i*10)).isoformat(), chain[i], chain[i+1], round(amount, 2), 'IMPS', 'COMPLETED', 'Transfer'))
         amount -= random.uniform(1000, 5000)
         
     _plant_txns_and_label(conn, txns, 'layering', chain, 1, 'standard')
+
 
 def plant_round_trip(conn, accounts):
     cycle = random.sample(accounts, 3)
@@ -60,32 +66,64 @@ def plant_round_trip(conn, accounts):
     
     for i in range(len(cycle)-1):
         txn_id = f"TXN_RND_{uuid.uuid4().hex[:6]}"
-        txns.append((txn_id, f"RTGS{random.randint(10000000, 99999999)}", (base_time + timedelta(days=i)).isoformat(), cycle[i], cycle[i+1], round(amount, 2), 'RTGS', 'COMPLETED', 'Business Payment'))
+        ref = f"UNIONB24{random.randint(10000000000000, 99999999999999)}" # Correct RTGS format
+        txns.append((txn_id, ref, (base_time + timedelta(days=i)).isoformat(), cycle[i], cycle[i+1], round(amount, 2), 'RTGS', 'COMPLETED', 'Business Payment'))
         
     _plant_txns_and_label(conn, txns, 'round_trip', cycle[:-1], 1, 'standard')
 
+
 def plant_dormant_activation(conn, accounts):
-    acc = random.choice(accounts)
-    peer = random.choice([a for a in accounts if a != acc])
+    num_dormant = random.randint(3, 8)
+    dormants = random.sample(accounts, num_dormant)
+    
     txns = []
-    base_time = datetime(2024, random.randint(1, 12), random.randint(1, 28))
-    amount = random.uniform(1000000, 5000000)
+    base_time = datetime(2024, random.randint(4, 12), random.randint(1, 28)) # Ensure >90 days into year
+    ninety_days_ago = (base_time - timedelta(days=90)).isoformat()
     
-    txns.append((f"TXN_DRM_{uuid.uuid4().hex[:6]}", f"NEFT{random.randint(10000000, 99999999)}", base_time.isoformat(), peer, acc, round(amount, 2), 'NEFT', 'COMPLETED', 'Fund Transfer'))
-    txns.append((f"TXN_DRM_{uuid.uuid4().hex[:6]}", f"RTGS{random.randint(10000000, 99999999)}", (base_time + timedelta(days=1)).isoformat(), acc, peer, round(amount-1000, 2), 'RTGS', 'COMPLETED', 'Return'))
+    # Delete transactions for these accounts in the 90 days prior to base_time to simulate dormancy
+    cursor = conn.cursor()
+    placeholders = ','.join('?' for _ in dormants)
+    cursor.execute(f"DELETE FROM Transactions WHERE (from_account IN ({placeholders}) OR to_account IN ({placeholders})) AND timestamp BETWEEN ? AND ?", (*dormants, *dormants, ninety_days_ago, base_time.isoformat()))
     
-    _plant_txns_and_label(conn, txns, 'dormant_activation', [acc, peer], 1, 'standard')
+    base_amount = random.uniform(500000, 2000000)
+    
+    for i, dormant_acc in enumerate(dormants):
+        peer = random.choice([a for a in accounts if a not in dormants])
+        amount = base_amount + random.uniform(-10000, 10000)
+        txn_id = f"TXN_DRM_{uuid.uuid4().hex[:6]}"
+        channel = 'NEFT'
+        ref = f"UNIONB24{random.randint(10000000000000, 99999999999999)}"
+        timestamp = (base_time + timedelta(minutes=random.randint(0, 120))).isoformat() # all activating within 2 hours
+        
+        txns.append((txn_id, ref, timestamp, peer, dormant_acc, round(amount, 2), channel, 'COMPLETED', 'Account Reactivation Transfer'))
+        
+    _plant_txns_and_label(conn, txns, 'dormant_activation', dormants, 1, 'standard')
+
 
 def plant_profile_mismatch(conn, accounts):
     acc = random.choice(accounts)
-    peer = random.choice([a for a in accounts if a != acc])
+    counterparties = random.sample([a for a in accounts if a != acc], 10)
+    
     txns = []
     base_time = datetime(2024, random.randint(1, 12), random.randint(1, 28))
-    amount = random.uniform(5000000, 10000000) 
     
-    txns.append((f"TXN_PRF_{uuid.uuid4().hex[:6]}", f"RTGS{random.randint(10000000, 99999999)}", base_time.isoformat(), peer, acc, round(amount, 2), 'RTGS', 'COMPLETED', 'Investment'))
+    for i in range(15):
+        peer = random.choice(counterparties)
+        amount = random.uniform(500000, 2000000) 
+        txn_id = f"TXN_PRF_{uuid.uuid4().hex[:6]}"
+        channel = random.choice(['RTGS', 'NEFT'])
+        ref = f"UNIONB24{random.randint(10000000000000, 99999999999999)}"
+        timestamp = (base_time + timedelta(hours=random.uniform(0, 24))).isoformat()
+        
+        if random.random() > 0.5:
+            from_acc, to_acc = peer, acc
+        else:
+            from_acc, to_acc = acc, peer
+            
+        txns.append((txn_id, ref, timestamp, from_acc, to_acc, round(amount, 2), channel, 'COMPLETED', 'Investment/Trading'))
     
-    _plant_txns_and_label(conn, txns, 'profile_mismatch', [acc, peer], 1, 'standard')
+    _plant_txns_and_label(conn, txns, 'profile_mismatch', [acc] + counterparties, 1, 'standard')
+
 
 def plant_clean_suspicious(conn, accounts):
     patterns = ['nri_remittance', 'bulk_payroll', 'seasonal_agricultural']
@@ -111,29 +149,5 @@ def plant_clean_suspicious(conn, accounts):
         farmer = random.choice(accounts)
         buyer = random.choice([a for a in accounts if a != farmer])
         amount = random.uniform(300000, 800000)
-        txns.append((f"TXN_CLN_{uuid.uuid4().hex[:6]}", f"RTGS{random.randint(10000000, 99999999)}", base_time.isoformat(), buyer, farmer, round(amount, 2), 'RTGS', 'COMPLETED', 'Crop Sale'))
+        txns.append((f"TXN_CLN_{uuid.uuid4().hex[:6]}", f"UNIONB24{random.randint(10000000000000, 99999999999999)}", base_time.isoformat(), buyer, farmer, round(amount, 2), 'RTGS', 'COMPLETED', 'Crop Sale'))
         _plant_txns_and_label(conn, txns, pattern, [farmer, buyer], 0, 'clean_suspicious')
-
-if __name__ == "__main__":
-    random.seed(42)
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT account_id FROM Accounts")
-    accs = [r[0] for r in cursor.fetchall()]
-    
-    if not accs:
-        print("No accounts found. Please run generator.py first.")
-        sys.exit(1)
-        
-    for _ in range(40):
-        plant_structuring(conn, accs)
-        plant_layering(conn, accs)
-        plant_round_trip(conn, accs)
-        plant_dormant_activation(conn, accs)
-        plant_profile_mismatch(conn, accs)
-        
-    for _ in range(50):
-        plant_clean_suspicious(conn, accs)
-        
-    print("Planted 200 fraud cases and 50 clean-but-suspicious cases successfully.")
-    conn.close()

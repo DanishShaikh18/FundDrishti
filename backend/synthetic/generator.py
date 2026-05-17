@@ -162,7 +162,16 @@ if __name__ == "__main__":
     generate_transactions(conn, accs)
     
     print("Planting Fraud Cases...")
-    subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), 'fraud_planters.py')])
+    import fraud_planters
+    for _ in range(40):
+        fraud_planters.plant_structuring(conn, accs)
+        fraud_planters.plant_layering(conn, accs)
+        fraud_planters.plant_round_trip(conn, accs)
+        fraud_planters.plant_dormant_activation(conn, accs)
+        fraud_planters.plant_profile_mismatch(conn, accs)
+        
+    for _ in range(50):
+        fraud_planters.plant_clean_suspicious(conn, accs)
     
     verify(conn)
     conn.close()
