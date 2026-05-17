@@ -21,13 +21,21 @@ We are not building another detector. We are the **force multiplier on top of ex
 ---
 
 ## How It Works
-Transaction DB → Pattern Detectors → Adaptive Orchestrator (LangGraph)
-↓
-Graph Agent · Profile Agent · Temporal Agent
-↓
-Fusion Layer (scored + explained)
-↓
-FIU Evidence Package (PDF + goAML XML)
+```mermaid
+flowchart TD
+    DB[(Transaction DB)] --> Detectors[Pattern Detectors]
+    Detectors --> Orchestrator[Adaptive Orchestrator\n(LangGraph)]
+    
+    subgraph Agents[Specialized Agents]
+        GraphA[Graph Agent]
+        ProfileA[Profile Agent]
+        TemporalA[Temporal Agent]
+    end
+    
+    Orchestrator --> Agents
+    Agents --> Fusion[Fusion Layer\n(scored + explained)]
+    Fusion --> FIU[FIU Evidence Package\n(PDF + goAML XML)]
+```
 
 **Five fraud patterns detected:**
 - Structuring / Smurfing — fan-in below CTR threshold
@@ -63,6 +71,7 @@ FIU Evidence Package (PDF + goAML XML)
 ---
 
 ## Project Structure
+```text
 funddrishti/
 ├── backend/
 │   ├── main.py                  # FastAPI app + all routes
@@ -80,6 +89,7 @@ funddrishti/
 ├── data/                        # SQLite DB (gitignored — regenerate locally)
 ├── docs/                        # D1 and D3 submission documents
 └── README.md
+```
 
 ---
 
