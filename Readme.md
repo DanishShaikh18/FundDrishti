@@ -24,7 +24,7 @@ We are not building another detector. We are the **force multiplier on top of ex
 ```mermaid
 flowchart TD
     DB[(Transaction DB)] --> Detectors[Pattern Detectors]
-    Detectors --> Orchestrator[Adaptive Orchestrator\n(LangGraph)]
+    Detectors --> Orchestrator["Adaptive Orchestrator (LangGraph)"]
     
     subgraph Agents[Specialized Agents]
         GraphA[Graph Agent]
@@ -33,8 +33,8 @@ flowchart TD
     end
     
     Orchestrator --> Agents
-    Agents --> Fusion[Fusion Layer\n(scored + explained)]
-    Fusion --> FIU[FIU Evidence Package\n(PDF + goAML XML)]
+    Agents --> Fusion["Fusion Layer (scored + explained)"]
+    Fusion --> FIU["FIU Evidence Package (PDF + goAML XML)"]
 ```
 
 **Five fraud patterns detected:**
