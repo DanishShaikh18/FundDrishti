@@ -35,7 +35,8 @@ def create_tables():
             branch_code TEXT,
             account_opened_date TEXT,
             is_watchlisted INTEGER DEFAULT 0,
-            pan_number TEXT
+            pan_number TEXT,
+            mobile_number TEXT
         )
     ''')
     
@@ -61,7 +62,8 @@ def create_tables():
             pattern_type TEXT,
             accounts_involved TEXT,
             fraud_label INTEGER,
-            difficulty TEXT
+            difficulty TEXT,
+            planted_at TEXT
         )
     ''')
     
@@ -84,7 +86,8 @@ def create_tables():
             accounts_involved TEXT,
             confidence_score REAL,
             amount_involved REAL,
-            status TEXT DEFAULT 'NEW'
+            status TEXT DEFAULT 'NEW',
+            created_by TEXT
         )
     ''')
     
