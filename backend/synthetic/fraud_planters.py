@@ -73,18 +73,35 @@ def plant_round_trip(conn, accounts):
 
 
 def plant_dormant_activation(conn, accounts):
-    num_dormant = random.randint(3, 8)
-    dormants = random.sample(accounts, num_dormant)
-    
-    txns = []
-    base_time = datetime(2024, random.randint(4, 12), random.randint(1, 28)) # Ensure >90 days into year
-    ninety_days_ago = (base_time - timedelta(days=90)).isoformat()
-    
-    # Delete transactions for these accounts in the 90 days prior to base_time to simulate dormancy
     cursor = conn.cursor()
-    placeholders = ','.join('?' for _ in dormants)
-    cursor.execute(f"DELETE FROM Transactions WHERE (from_account IN ({placeholders}) OR to_account IN ({placeholders})) AND timestamp BETWEEN ? AND ?", (*dormants, *dormants, ninety_days_ago, base_time.isoformat()))
+    txns = []
     
+    # Try to find a valid 90-day window with enough dormant accounts
+    for _ in range(10):
+        base_time = datetime(2024, random.randint(4, 12), random.randint(1, 28))
+        ninety_days_ago = (base_time - timedelta(days=90)).isoformat()
+        
+        cursor.execute('''
+            SELECT account_id FROM Accounts 
+            WHERE account_id NOT IN (
+                SELECT from_account FROM Transactions WHERE timestamp BETWEEN ? AND ?
+                UNION
+                SELECT to_account FROM Transactions WHERE timestamp BETWEEN ? AND ?
+            )
+        ''', (ninety_days_ago, base_time.isoformat(), ninety_days_ago, base_time.isoformat()))
+        
+        available_accounts = [row[0] for row in cursor.fetchall()]
+        num_dormant = random.randint(3, 8)
+        
+        if len(available_accounts) >= num_dormant:
+            dormants = random.sample(available_accounts, num_dormant)
+            break
+    else:
+        # Fallback if no window had enough dormant accounts
+        base_time = datetime(2024, random.randint(4, 12), random.randint(1, 28))
+        num_dormant = random.randint(3, 8)
+        dormants = random.sample(accounts, num_dormant)
+        
     base_amount = random.uniform(500000, 2000000)
     
     for i, dormant_acc in enumerate(dormants):

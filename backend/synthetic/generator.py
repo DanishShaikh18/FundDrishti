@@ -2,7 +2,6 @@ import sqlite3
 import random
 import os
 import sys
-import subprocess
 from datetime import datetime, timedelta
 
 try:
