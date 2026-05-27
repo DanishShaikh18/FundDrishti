@@ -1,5 +1,6 @@
 import sqlite3
 from collections import defaultdict
+from datetime import datetime
 
 def detect_round_trip(conn):
     cursor = conn.cursor()
@@ -11,7 +12,6 @@ def detect_round_trip(conn):
     ''')
     rows = cursor.fetchall()
 
-    # Build adjacency
     outgoing = defaultdict(list)
     for row in rows:
         txn_id, from_acc, to_acc, amount, timestamp, channel = row
@@ -28,39 +28,30 @@ def detect_round_trip(conn):
     visited_cycles = set()
 
     def dfs(start_acc, current_acc, chain, visited):
+        if len(chain) > 5:
+            return
         for txn in outgoing.get(current_acc, []):
-            # Temporal validation
             if chain and txn["timestamp"] <= chain[-1]["timestamp"]:
                 continue
-
-            # Cycle found — money returned to start
             if txn["to_account"] == start_acc and len(chain) >= 2:
                 full_chain = chain + [txn]
-
-                # Cycle must complete within 72 hours
-                from datetime import datetime
                 start_time = datetime.fromisoformat(full_chain[0]["timestamp"])
                 end_time = datetime.fromisoformat(full_chain[-1]["timestamp"])
                 hours_elapsed = (end_time - start_time).total_seconds() / 3600
                 if hours_elapsed > 72:
                     continue
-
-                # Return amount must be within 15% of sent amount
                 sent = full_chain[0]["amount"]
                 returned = full_chain[-1]["amount"]
                 if abs(sent - returned) / sent > 0.15:
                     continue
-
                 cycle_key = tuple(sorted(t["txn_id"] for t in full_chain))
                 if cycle_key in visited_cycles:
                     continue
                 visited_cycles.add(cycle_key)
-
                 accounts = list(dict.fromkeys(
                     [t["from_account"] for t in full_chain] +
                     [t["to_account"] for t in full_chain]
                 ))
-
                 findings.append({
                     "pattern_type": "round_trip",
                     "confidence": round(min(1.0, 1 - (hours_elapsed / 72) * 0.3), 2),
@@ -73,14 +64,11 @@ def detect_round_trip(conn):
                             f"through {len(chain)} intermediary accounts"
                         )
                     },
-                    "score_contribution": 25
+                    "score_contribution": 30
                 })
                 continue
-
-            # Avoid loops in DFS
             if txn["to_account"] in visited:
                 continue
-
             dfs(start_acc, txn["to_account"], chain + [txn], visited | {txn["to_account"]})
 
     for account in outgoing:
