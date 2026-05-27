@@ -1,0 +1,176 @@
+.case-view-combined {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.case-view-combined h3 {
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+  flex-shrink: 0;
+}
+
+.metrics-section {
+  flex-shrink: 0;
+  margin-bottom: 1.25rem;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.metric {
+  background-color: rgba(255, 255, 255, 0.015);
+  padding: 0.75rem 0.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  text-align: center;
+  transition: var(--transition-fast);
+}
+
+.metric:hover {
+  background-color: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.metric-label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.metric-value {
+  display: block;
+  font-family: var(--font-display);
+  color: var(--accent);
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(var(--accent-rgb), 0.2);
+}
+
+.metric-value.status-open {
+  color: var(--danger);
+  text-shadow: 0 0 10px rgba(var(--accent-pink-rgb), 0.2);
+}
+
+.metric-value.status-investigating {
+  color: var(--warning);
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+}
+
+.metric-value.status-closed {
+  color: var(--success);
+  text-shadow: 0 0 10px rgba(var(--accent-cyan-rgb), 0.2);
+}
+
+/* Accounts Involved section */
+.accounts-section {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.accounts-scroll-list {
+  height: 175px;
+  max-height: 175px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-right: 0.25rem;
+}
+
+.account-card {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-left: 4px solid var(--glass-border);
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  transition: var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.account-card:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateX(3px);
+}
+
+.account-card.role-victim {
+  border-left-color: var(--accent-cyan);
+}
+
+.account-card.role-suspect {
+  border-left-color: var(--accent-pink);
+}
+
+.account-card.role-intermediary {
+  border-left-color: var(--accent);
+}
+
+.account-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.account-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.account-id {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-family: monospace;
+}
+
+.account-details-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  margin-top: 0.1rem;
+}
+
+.account-profile-type {
+  color: var(--text-secondary);
+}
+
+.account-transactions {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.account-role {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.account-card.role-victim .account-role {
+  color: var(--accent-cyan);
+}
+
+.account-card.role-suspect .account-role {
+  color: var(--accent-pink);
+}
+
+.account-card.role-intermediary .account-role {
+  color: var(--accent);
+}

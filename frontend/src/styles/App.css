@@ -1,0 +1,101 @@
+.app-container {
+  min-height: 100vh;
+  background-color: var(--dark-bg);
+  position: relative;
+  z-index: 1;
+}
+
+.app-header {
+  background: rgba(var(--dark-bg-rgb), 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1.5rem 2rem;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-header h1 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* --- Animated Radial Gradient Orbs Background --- */
+.bg-orbs-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.28;
+  mix-blend-mode: screen;
+}
+
+.orb-purple {
+  width: 45vw;
+  height: 45vw;
+  background: radial-gradient(circle, rgba(var(--accent-rgb), 0.7) 0%, rgba(var(--dark-bg-rgb), 0) 70%);
+  top: -10%;
+  left: -10%;
+  animation: float-purple 24s infinite alternate ease-in-out;
+}
+
+.orb-cyan {
+  width: 50vw;
+  height: 50vw;
+  background: radial-gradient(circle, rgba(var(--accent-cyan-rgb), 0.65) 0%, rgba(var(--dark-bg-rgb), 0) 70%);
+  bottom: -15%;
+  right: -10%;
+  animation: float-cyan 30s infinite alternate ease-in-out;
+}
+
+.orb-pink {
+  width: 40vw;
+  height: 40vw;
+  background: radial-gradient(circle, rgba(var(--accent-pink-rgb), 0.5) 0%, rgba(var(--dark-bg-rgb), 0) 75%);
+  top: 40%;
+  left: 35%;
+  animation: float-pink 27s infinite alternate ease-in-out;
+}
+
+@keyframes float-purple {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(8%, 12%) scale(1.1); }
+  100% { transform: translate(-5%, 5%) scale(0.95); }
+}
+
+@keyframes float-cyan {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-10%, -8%) scale(0.9); }
+  100% { transform: translate(5%, -15%) scale(1.15); }
+}
+
+@keyframes float-pink {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(12%, -10%) scale(1.1) rotate(180deg); }
+  100% { transform: translate(-10%, 15%) scale(0.85) rotate(360deg); }
+}

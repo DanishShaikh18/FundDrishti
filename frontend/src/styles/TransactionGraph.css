@@ -1,0 +1,23 @@
+.transaction-graph {
+  width: 100%;
+  height: 500px;
+  background: transparent;
+  border: none;
+  overflow: hidden;
+  position: relative;
+  touch-action: none;
+  user-select: none;
+}
+
+.transaction-graph.empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+/* Cytoscape specific styling */
+.transaction-graph canvas {
+  background: transparent !important;
+}

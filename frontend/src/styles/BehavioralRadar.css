@@ -1,0 +1,45 @@
+.behavioral-radar {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+.behavioral-radar.empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.behavioral-radar h3 {
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+/* Recharts customization */
+.behavioral-radar .recharts-legend-wrapper {
+  padding-top: 1rem;
+}
+
+.behavioral-radar .recharts-tooltip-wrapper {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.behavioral-radar .recharts-tooltip {
+  background-color: rgba(7, 3, 16, 0.85) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+@media (max-width: 768px) {
+  .behavioral-radar h3 {
+    font-size: 1rem;
+  }
+}

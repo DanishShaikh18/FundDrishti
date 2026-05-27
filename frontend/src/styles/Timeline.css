@@ -1,0 +1,160 @@
+.timeline-container {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  margin-top: 0;
+}
+
+.timeline-container h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 1rem;
+}
+
+.timeline-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-item {
+  display: flex;
+  position: relative;
+  padding-bottom: 1.5rem;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 1.25rem;
+  position: relative;
+}
+
+.timeline-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  border: 2px solid var(--dark-bg);
+  box-shadow: 0 0 0 2px var(--accent);
+  z-index: 2;
+  transition: var(--transition-fast);
+}
+
+.timeline-line {
+  width: 2px;
+  background-color: var(--glass-border);
+  position: absolute;
+  top: 12px;
+  bottom: -1.5rem;
+  z-index: 1;
+}
+
+.timeline-content {
+  flex: 1;
+  background-color: rgba(255, 255, 255, 0.015);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  transition: var(--transition-fast);
+}
+
+.timeline-content:hover {
+  background-color: rgba(255, 255, 255, 0.035);
+  border-color: var(--glass-border-hover);
+  transform: translateX(3px);
+}
+
+.timeline-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.timeline-tx-details {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.account-pill {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.from-acc {
+  background-color: rgba(244, 114, 182, 0.1);
+  color: var(--accent-pink);
+  border: 1px solid rgba(244, 114, 182, 0.15);
+}
+
+.to-acc {
+  background-color: rgba(6, 182, 212, 0.1);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(6, 182, 212, 0.15);
+}
+
+.tx-arrow {
+  color: var(--text-muted);
+  font-weight: bold;
+}
+
+.timeline-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.tx-amount {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.tx-channel-badge {
+  font-size: 0.7rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.tx-narration {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.05);
+  padding-top: 0.4rem;
+}
+
+/* Suspicious/Large Transaction highlighting */
+.suspicious-tx .timeline-dot {
+  background-color: var(--accent-pink);
+  box-shadow: 0 0 0 2px var(--accent-pink), 0 0 10px var(--accent-pink);
+}
+
+.suspicious-tx .timeline-content {
+  border-left: 3px solid var(--accent-pink);
+  background-color: rgba(244, 114, 182, 0.03);
+}
+
+.suspicious-tx .tx-amount {
+  color: var(--accent-pink);
+}
