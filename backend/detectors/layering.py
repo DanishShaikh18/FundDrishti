@@ -11,7 +11,6 @@ def detect_layering(conn):
     ''')
     rows = cursor.fetchall()
 
-    # Build adjacency: from_account -> list of outgoing transactions
     outgoing = defaultdict(list)
     for row in rows:
         txn_id, from_acc, to_acc, amount, timestamp, channel = row
@@ -28,23 +27,31 @@ def detect_layering(conn):
     visited_chains = set()
 
     def bfs(start_acc):
-        # Each queue item: (current_account, chain_so_far)
         queue = [(start_acc, [])]
         while queue:
             current, chain = queue.pop(0)
             for txn in outgoing.get(current, []):
-                # Temporal validation: timestamp must be after last hop
-                if chain and txn["timestamp"] <= chain[-1]["timestamp"]:
-                    continue
-                # Amount must not drop more than 20% from previous hop
-                if chain and txn["amount"] < chain[-1]["amount"] * 0.80:
-                    continue
+                if chain:
+                    if txn["timestamp"] <= chain[-1]["timestamp"]:
+                        continue
+                    if txn["amount"] < chain[-1]["amount"] * 0.80:
+                        continue
+                    first_ts = chain[0]["timestamp"]
+                    hours_elapsed = (
+                        _ts_to_minutes(txn["timestamp"]) - _ts_to_minutes(first_ts)
+                    ) / 60
+                    if hours_elapsed > 72:
+                        continue
+
                 new_chain = chain + [txn]
+
                 if len(new_chain) >= 3:
                     chain_key = tuple(t["txn_id"] for t in new_chain)
                     if chain_key not in visited_chains:
                         visited_chains.add(chain_key)
-                        accounts = [new_chain[0]["from_account"]] + [t["to_account"] for t in new_chain]
+                        accounts = [new_chain[0]["from_account"]] + [
+                            t["to_account"] for t in new_chain
+                        ]
                         findings.append({
                             "pattern_type": "layering",
                             "confidence": round(min(len(new_chain) / 5, 1.0), 2),
@@ -53,13 +60,13 @@ def detect_layering(conn):
                                 "transactions": new_chain,
                                 "finding": (
                                     f"{len(new_chain)}-hop layering chain detected from "
-                                    f"{new_chain[0]['from_account']} — funds moved rapidly "
-                                    f"with strict timestamp progression and minimal skimming"
+                                    f"{new_chain[0]['from_account']} — funds moved within "
+                                    f"72 hours with strict timestamp progression and minimal skimming"
                                 )
                             },
                             "score_contribution": 25
                         })
-                # Continue BFS only up to 5 hops
+
                 if len(new_chain) < 5:
                     queue.append((txn["to_account"], new_chain))
 
@@ -67,3 +74,9 @@ def detect_layering(conn):
         bfs(account)
 
     return findings
+
+
+def _ts_to_minutes(ts):
+    from datetime import datetime
+    dt = datetime.fromisoformat(ts)
+    return int(dt.timestamp() / 60)
