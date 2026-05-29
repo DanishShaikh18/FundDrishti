@@ -12,6 +12,7 @@ from detectors.round_trip import detect_round_trip
 from detectors.dormancy import detect_dormancy
 from detectors.profile import detect_profile_mismatch
 from agents.orchestrator import investigate
+from fusion import compute_final_score
 
 app = FastAPI(title="FundDrishti API")
 
@@ -117,3 +118,12 @@ def run_investigation(pattern_type: str, accounts: str):
     account_list = [a.strip() for a in accounts.split(",")]
     result = investigate(pattern_type, account_list)
     return result
+
+
+@app.post("/score")
+def score(pattern_type: str, accounts: str):
+    account_list = [a.strip() for a in accounts.split(",")]
+    conn = get_connection()
+    result = compute_final_score(conn, pattern_type, [], account_list)
+    conn.close()
+    return result 
