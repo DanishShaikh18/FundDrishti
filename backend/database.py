@@ -96,6 +96,7 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS Cases (
             case_id TEXT PRIMARY KEY,
             alert_id TEXT,
+            pattern_type TEXT,
             risk_score REAL,
             score_breakdown TEXT,
             agent_findings TEXT,

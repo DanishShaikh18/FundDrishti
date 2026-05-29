@@ -163,3 +163,18 @@ def generate_fiu(case_id: str):
     path = generate_fiu_package(conn, case_id)
     conn.close()
     return FileResponse(path, media_type="application/pdf", filename=f"FIU_{case_id}.pdf")
+
+
+@app.post("/investigate")
+def run_investigation(pattern_type: str, accounts: str):
+    account_list = [a.strip() for a in accounts.split(",")]
+    result = investigate(pattern_type, account_list)
+    # Store pattern_type in case
+    conn = get_connection()
+    conn.execute(
+        "UPDATE Cases SET pattern_type = ? WHERE case_id = ?",
+        (pattern_type, result["case_id"])
+    )
+    conn.commit()
+    conn.close()
+    return result
