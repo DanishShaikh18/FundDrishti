@@ -11,6 +11,7 @@ from detectors.layering import detect_layering
 from detectors.round_trip import detect_round_trip
 from detectors.dormancy import detect_dormancy
 from detectors.profile import detect_profile_mismatch
+from agents.orchestrator import investigate
 
 app = FastAPI(title="FundDrishti API")
 
@@ -110,3 +111,9 @@ def stats():
         "fraud_by_pattern": fraud_by_pattern,
         "watchlisted_accounts": watchlisted_accounts
     }
+
+@app.post("/investigate")
+def run_investigation(pattern_type: str, accounts: str):
+    account_list = [a.strip() for a in accounts.split(",")]
+    result = investigate(pattern_type, account_list)
+    return result
