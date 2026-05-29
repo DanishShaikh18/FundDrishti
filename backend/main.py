@@ -1,0 +1,112 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from database import get_connection
+from detectors.structuring import detect_structuring
+from detectors.layering import detect_layering
+from detectors.round_trip import detect_round_trip
+from detectors.dormancy import detect_dormancy
+from detectors.profile import detect_profile_mismatch
+
+app = FastAPI(title="FundDrishti API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+@app.get("/detect/structuring")
+def structuring():
+    conn = get_connection()
+    results = detect_structuring(conn)
+    conn.close()
+    return {"pattern": "structuring", "count": len(results), "findings": results}
+
+@app.get("/detect/layering")
+def layering():
+    conn = get_connection()
+    results = detect_layering(conn)
+    conn.close()
+    return {"pattern": "layering", "count": len(results), "findings": results}
+
+@app.get("/detect/round_trip")
+def round_trip():
+    conn = get_connection()
+    results = detect_round_trip(conn)
+    conn.close()
+    return {"pattern": "round_trip", "count": len(results), "findings": results}
+
+@app.get("/detect/dormancy")
+def dormancy():
+    conn = get_connection()
+    results = detect_dormancy(conn)
+    conn.close()
+    return {"pattern": "dormant_activation", "count": len(results), "findings": results}
+
+@app.get("/detect/profile")
+def profile():
+    conn = get_connection()
+    results = detect_profile_mismatch(conn)
+    conn.close()
+    return {"pattern": "profile_mismatch", "count": len(results), "findings": results}
+
+@app.get("/detect/all")
+def detect_all():
+    conn = get_connection()
+    results = {
+        "structuring": detect_structuring(conn),
+        "layering": detect_layering(conn),
+        "round_trip": detect_round_trip(conn),
+        "dormant_activation": detect_dormancy(conn),
+        "profile_mismatch": detect_profile_mismatch(conn)
+    }
+    conn.close()
+    total = sum(len(v) for v in results.values())
+    return {"total_findings": total, "findings": results}
+
+@app.get("/stats")
+def stats():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM Accounts")
+    total_accounts = cursor.fetchone()[0]
+
+    cursor.execute("SELECT profile_type, COUNT(*) FROM Accounts GROUP BY profile_type")
+    accounts_by_profile = {row[0]: row[1] for row in cursor.fetchall()}
+
+    cursor.execute("SELECT COUNT(*) FROM Transactions")
+    total_transactions = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM Transactions WHERE status = 'COMPLETED'")
+    completed_transactions = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM Labels WHERE fraud_label = 1")
+    fraud_cases = cursor.fetchone()[0]
+
+    cursor.execute("SELECT pattern_type, COUNT(*) FROM Labels WHERE fraud_label = 1 GROUP BY pattern_type")
+    fraud_by_pattern = {row[0]: row[1] for row in cursor.fetchall()}
+
+    cursor.execute("SELECT COUNT(*) FROM Watchlist")
+    watchlisted_accounts = cursor.fetchone()[0]
+
+    conn.close()
+    return {
+        "total_accounts": total_accounts,
+        "accounts_by_profile": accounts_by_profile,
+        "total_transactions": total_transactions,
+        "completed_transactions": completed_transactions,
+        "fraud_cases_planted": fraud_cases,
+        "fraud_by_pattern": fraud_by_pattern,
+        "watchlisted_accounts": watchlisted_accounts
+    }
