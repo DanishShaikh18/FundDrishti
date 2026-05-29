@@ -126,4 +126,4 @@ def score(pattern_type: str, accounts: str):
     conn = get_connection()
     result = compute_final_score(conn, pattern_type, [], account_list)
     conn.close()
-    return result 
+    return result
