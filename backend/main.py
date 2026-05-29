@@ -13,6 +13,7 @@ from detectors.dormancy import detect_dormancy
 from detectors.profile import detect_profile_mismatch
 from agents.orchestrator import investigate
 from fusion import compute_final_score
+import json
 
 app = FastAPI(title="FundDrishti API")
 
@@ -127,3 +128,38 @@ def score(pattern_type: str, accounts: str):
     result = compute_final_score(conn, pattern_type, [], account_list)
     conn.close()
     return result
+
+
+@app.get("/case/{case_id}")
+def get_case(case_id: str):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Cases WHERE case_id = ?", (case_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return {"error": "Case not found"}
+    return dict(row)
+
+@app.post("/case/{case_id}/sign")
+def sign_case(case_id: str, body: dict):
+    from datetime import datetime
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE Cases SET narrative_status = 'SIGNED',
+        investigator_name = ?, signed_at = ?
+        WHERE case_id = ?
+    ''', (body.get("investigator_name"), datetime.now().isoformat(), case_id))
+    conn.commit()
+    conn.close()
+    return {"status": "signed"}
+
+@app.post("/case/{case_id}/generate-fiu")
+def generate_fiu(case_id: str):
+    from fastapi.responses import FileResponse
+    from fiu_package import generate_fiu_package
+    conn = get_connection()
+    path = generate_fiu_package(conn, case_id)
+    conn.close()
+    return FileResponse(path, media_type="application/pdf", filename=f"FIU_{case_id}.pdf")
