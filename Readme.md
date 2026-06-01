@@ -43,24 +43,75 @@ The investigator reviews, signs, and submits. Their review time: under 20 minute
 ---
 
 ## Architecture
-Transaction DB → Pattern Detectors (5)
-↓
-Adaptive Orchestrator (LangGraph)
-reads pattern type → scopes agents to relevant subgraph only
-↓
-┌───────────────┼───────────────┐
-Graph Agent    Profile Agent   Temporal Agent
-NetworkX       Z-score         Sequence + dormancy
-└───────────────┼───────────────┘
-↓
-Fusion Layer
-LR-derived weights · point-traceable score
-↓
-FIU Evidence Package
-Gemini narrative · ReportLab PDF · goAML XML
-Human sign-off required before submission
+
+### System Flow Diagram
+
+```text
+Transaction DB ──> Pattern Detectors (5)
+                         │
+                         ▼
+             Adaptive Orchestrator (LangGraph)
+      (Reads pattern type ──> Scopes agents to relevant subgraph)
+                         │
+                         ▼
+        ┌────────────────┼────────────────┐
+        ▼                ▼                ▼
+   Graph Agent     Profile Agent    Temporal Agent
+    (NetworkX)       (Z-score)    (Sequence+Dormancy)
+        └────────────────┬────────────────┘
+                         │
+                         ▼
+                    Fusion Layer
+          (LR-derived weights & traceable score)
+                         │
+                         ▼
+                FIU Evidence Package
+       (Gemini Narrative + PDF Report + goAML XML)
+```
+
+### Directory Structure
+
+```text
+funddrishti/
+├── backend/
+│   ├── agents/
+│   │   ├── graph_agent.py          # Graph exploration and network analysis
+│   │   ├── orchestrator.py         # LangGraph state management and routing
+│   │   ├── profile_agent.py        # Peer-group anomaly analysis
+│   │   └── temporal_agent.py       # Sequential pattern and activation analysis
+│   ├── detectors/
+│   │   ├── dormancy.py             # Dormant account activation triggers
+│   │   ├── layering.py             # Circular layering path detection
+│   │   ├── profile.py              # Profile change & anomaly threshold detection
+│   │   ├── round_trip.py           # DFS cycle detection algorithms
+│   │   └── structuring.py          # Smurfing and transactional threshold splits
+│   ├── synthetic/
+│   │   ├── fraud_planters.py       # Pre-seeded pattern planters
+│   │   └── generator.py            # SQLite database transaction populator
+│   ├── database.py                 # SQLite schema and DB manager
+│   ├── fiu_package.py              # ReportLab PDF & goAML XML generation
+│   ├── fusion.py                   # ML weight fusion & risk calculation
+│   ├── main.py                     # FastAPI routes and server config
+│   ├── narrative.py                # Gemini LLM narrative compiler
+│   └── requirements.txt            # Python dependencies
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── AgentPanel.jsx      # Agent outputs and logs display
+│   │   │   ├── GraphView.jsx       # Cytoscape transaction graph visualization
+│   │   │   └── Timeline.jsx        # Temporal event chronology
+│   │   ├── pages/
+│   │   │   ├── AlertQueue.jsx      # Active suspicion alerts list
+│   │   │   ├── CaseReview.jsx      # Final approval & narrative report workspace
+│   │   │   └── Investigation.jsx   # Interactive real-time investigation workspace
+│   │   ├── App.jsx                 # Routes and main interface structure
+│   │   └── main.jsx                # React entrypoint
+│   └── package.json                # Frontend dependencies
+└── Readme.md                       # Documentation
+```
 
 **What makes the orchestrator genuinely agentic:** it does not run all agents on all accounts. It reads the detected pattern type and dynamically scopes which agents run on which subgraph. A hub pattern scopes the Profile Agent to 2nd-degree neighbors only. A dormant activation pattern runs the Temporal Agent bank-wide in cluster mode. The next action is determined by the prior finding — that is the definition of agentic.
+
 
 ---
 
