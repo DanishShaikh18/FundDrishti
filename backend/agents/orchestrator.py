@@ -102,17 +102,22 @@ def _compute_score(agent_results, base_score_contribution):
     Agent findings add on top.
     """
     total = base_score_contribution
-    breakdown = [f"Detector finding: {base_score_contribution} pts"]
+    breakdown = [{"component": "Detector finding", "points": base_score_contribution, "basis": "Base score from pattern detection"}]
 
     for result in agent_results:
         for finding in result.get("findings", []):
             pts = finding.get("score", 0)
             if pts > 0:
                 total += pts
-                breakdown.append(f"{finding['type']}: +{pts} pts")
+                breakdown.append({
+                    "component": f"{result.get('agent', 'unknown')} — {finding['type']}",
+                    "points": pts,
+                    "basis": finding.get("detail", "")
+                })
 
     total = min(total, 100)
     return total, breakdown
+
 
 
 def investigate(pattern_type, accounts_involved, base_score_contribution=35):

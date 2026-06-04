@@ -5,6 +5,12 @@ import os
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
+except ImportError:
+    pass
+
 from database import get_connection
 from detectors.structuring import detect_structuring
 from detectors.layering import detect_layering
@@ -114,11 +120,6 @@ def stats():
         "watchlisted_accounts": watchlisted_accounts
     }
 
-@app.post("/investigate")
-def run_investigation(pattern_type: str, accounts: str):
-    account_list = [a.strip() for a in accounts.split(",")]
-    result = investigate(pattern_type, account_list)
-    return result
 
 
 @app.post("/score")

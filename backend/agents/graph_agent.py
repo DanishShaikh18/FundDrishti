@@ -56,7 +56,7 @@ def run_graph_agent(conn, account_ids):
 
     # Cycle detection
     try:
-        cycles = list(nx.simple_cycles(G))
+        cycles = list(nx.simple_cycles(G, length_bound=5))
         if cycles:
             log_steps.append(f"Cycle detection: found {len(cycles)} cycle(s)")
             findings.append({
@@ -67,6 +67,7 @@ def run_graph_agent(conn, account_ids):
             })
     except Exception:
         pass
+
 
     # Watchlist proximity
     cursor.execute("SELECT account_id FROM Watchlist")
